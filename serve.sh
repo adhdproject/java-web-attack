@@ -15,7 +15,7 @@ sudo service apache2 stop
 echo "Shutting down nginx..."
 sudo service nginx stop
 echo "Starting python web server..."
-sudo python -m SimpleHTTPServer 80 >> http.log 2>&1 &
+sudo python3 -m http.server 80 >> http.log 2>&1 &
 serverPID="$!"
 echo "Now starting payload listeners. Please be patient."
 "$msfpath"msfconsole -r listeners.rc
